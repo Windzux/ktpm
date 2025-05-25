@@ -1,4 +1,1 @@
-
-export class SocketService { 
-   
-} 
+export class SocketService {}

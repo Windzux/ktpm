@@ -1,26 +1,33 @@
-import * as path from 'path';
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 
-export async function ReadConfig() {
-    dotenv.config();
-    const resolvedir = (dir) => dir ? path.resolve(process.cwd(), dir) : undefined;
-    const config = {
-        server: {
-            port: +process.env.PORT || 3000,
-        },
-        database: {
-            db_url: `${process.env.DB_HOST}`,
-            db_name: process.env.DB_NAME,
-            db_user: process.env.DB_USER,
-            db_pass: process.env.DB_PASSWORD,
-            db_dialect: process.env.DB_DIALECT
-        },
-        app: {
-            dir: resolvedir("../frontend/build"),
-        }
-    };
-    Object.defineProperty(config.database, 'db_url', {
-        enumerable: false
-    });
-    return config;
+dotenv.config();
+
+export interface Config {
+  app: {
+    port: number;
+    dir?: string;
+  };
+  database: {
+    db_url: string;
+    db_name: string;
+    db_user: string;
+    db_pass: string;
+    db_dialect: string;
+  };
+}
+
+export function ReadConfig(): Config {
+  return {
+    app: {
+      port: parseInt(process.env.PORT || "6969"),
+      dir: process.env.APP_DIR,
+    },
+    database: {
+      db_url: process.env.DB_URL || "localhost",
+      db_name: process.env.DB_NAME || "socket_live_sky",
+      db_user: process.env.DB_USER || "root",
+      db_pass: process.env.DB_PASS || "022537",
+      db_dialect: process.env.DB_DIALECT || "mysql",
+    },
+  };
 }

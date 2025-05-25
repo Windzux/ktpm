@@ -1,13 +1,15 @@
-import jwt = require('jsonwebtoken');
+import jwt = require("jsonwebtoken");
 export interface paramsSetToken {
-    username: string,
-    password: string,
-    role: string,
+  username: string;
+  password: string;
+  role: string;
 }
-export const createToken = (params: paramsSetToken) : any =>    {
-       const { username , password, role } =  params;
-       const token = jwt.sign(params , process.env.SECRETTOKEN, {
-            expiresIn: process.env.expTime,
-        })
-        return token;
- }
+
+const expiresIn = 1000 * 60 * 60;
+export const createToken = (params: paramsSetToken): any => {
+  const { username, role } = params;
+  const token = jwt.sign(params, "1111111111111", {
+    expiresIn: `${expiresIn}`,
+  });
+  return token;
+};

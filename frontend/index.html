@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ứng Dụng Quản Lý Bán Hàng</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #6e8efb, #a777e3);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 800px;
+        text-align: center;
+      }
+      .form-group {
+        margin-bottom: 15px;
+        text-align: left;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 500;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-sizing: border-box;
+        font-size: 14px;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      .tab-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .tab-buttons button {
+        flex: 1;
+        margin: 0 5px;
+        background-color: #ddd;
+        color: #333;
+      }
+      .tab-buttons button.active {
+        background-color: #4caf50;
+        color: white;
+      }
+      .message {
+        margin-top: 10px;
+        font-size: 14px;
+      }
+      .error {
+        color: #f44336;
+      }
+      .success {
+        color: #4caf50;
+      }
+      #mainContent {
+        display: none;
+      }
+      #mainContent.active {
+        display: block;
+      }
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .product-card {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        text-align: center;
+      }
+      .product-card img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+      }
+      .product-card .buy-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 24px;
+        padding: 0;
+        margin-top: 10px;
+        background-color: #2196f3;
+      }
+      .admin-actions {
+        margin-top: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+      th {
+        background-color: #f4f4f4;
+        color: #333;
+      }
+      .action-btn {
+        padding: 5px 10px;
+        margin-right: 5px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .edit-btn {
+        background-color: #2196f3;
+        color: white;
+      }
+      .delete-btn {
+        background-color: #f44336;
+        color: white;
+      }
+      #loading {
+        text-align: center;
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="authContainer">
+      <div class="tab-buttons">
+        <button class="active" onclick="showTab('login')">Đăng Nhập</button>
+        <button onclick="showTab('register')">Đăng Ký</button>
+      </div>
+
+      <!-- Đăng nhập -->
+      <div id="loginTab" class="tab-content">
+        <div class="form-group">
+          <label for="loginUsername">Tên Người Dùng:</label>
+          <input
+            type="text"
+            id="loginUsername"
+            placeholder="Nhập tên người dùng"
+          />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Mật Khẩu:</label>
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Nhập mật khẩu"
+          />
+        </div>
+        <button onclick="login()">Đăng Nhập</button>
+        <div id="authMessage" class="message"></div>
+      </div>
+
+      <!-- Đăng ký -->
+      <div id="registerTab" class="tab-content" style="display: none">
+        <div class="form-group">
+          <label for="registerUsername">Tên Người Dùng:</label>
+          <input
+            type="text"
+            id="registerUsername"
+            placeholder="Nhập tên người dùng"
+          />
+        </div>
+        <div class="form-group">
+          <label for="registerPassword">Mật Khẩu:</label>
+          <input
+            type="password"
+            id="registerPassword"
+            placeholder="Nhập mật khẩu"
+          />
+        </div>
+        <button onclick="register()">Đăng Ký</button>
+        <div id="authMessage" class="message"></div>
+      </div>
+    </div>
+
+    <!-- Nội dung chính (sau khi đăng nhập) -->
+    <div class="container" id="mainContent">
+      <div id="userContent" class="product-grid"></div>
+      <div id="adminContent" class="admin-actions" style="display: none">
+        <div class="form-group">
+          <label for="productName">Tên Sản Phẩm:</label>
+          <input type="text" id="productName" placeholder="Nhập tên sản phẩm" />
+        </div>
+        <div class="form-group">
+          <label for="productPrice">Giá:</label>
+          <input
+            type="number"
+            id="productPrice"
+            placeholder="Nhập giá"
+            step="0.01"
+            min="0"
+          />
+        </div>
+        <button id="addProductButton" onclick="createProduct()">
+          Thêm Sản Phẩm
+        </button>
+        <div id="productMessage" class="message"></div>
+
+        <h2>Danh Sách Sản Phẩm</h2>
+        <button onclick="fetchProducts()">Làm Mới</button>
+        <table id="productTable">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Tên</th>
+              <th>Giá</th>
+              <th>Hành Động</th>
+            </tr>
+          </thead>
+          <tbody id="productList"></tbody>
+        </table>
+      </div>
+
+      <div id="loading" style="display: none">Đang tải...</div>
+      <h2>Danh Sách Đơn Hàng</h2>
+      <button onclick="fetchOrders()">Làm Mới</button>
+      <div id="orderMessage" class="message"></div>
+      <table id="orderTable">
+        <thead>
+          <tr>
+            <th>Mã Đơn</th>
+            <th>Tên Người Dùng</th>
+            <th>Tổng Tiền</th>
+            <th>Trạng Thái</th>
+          </tr>
+        </thead>
+        <tbody id="orderList"></tbody>
+      </table>
+      <button
+        onclick="logout()"
+        style="background-color: #f44336; margin-top: 20px"
+      >
+        Đăng Xuất
+      </button>
+    </div>
+
+    <script>
+      let token = localStorage.getItem("token") || null;
+      let userRole = localStorage.getItem("role") || "user";
+      const API_BASE_URL = "http://localhost:6969/api/v1";
+
+      // Hiển thị tab đăng nhập/đăng ký
+      function showTab(tab) {
+        const loginTab = document.getElementById("loginTab");
+        const registerTab = document.getElementById("registerTab");
+        const loginBtn = document.querySelector(
+          ".tab-buttons button:nth-child(1)"
+        );
+        const registerBtn = document.querySelector(
+          ".tab-buttons button:nth-child(2)"
+        );
+
+        if (tab === "login") {
+          loginTab.style.display = "block";
+          registerTab.style.display = "none";
+          loginBtn.classList.add("active");
+          registerBtn.classList.remove("active");
+        } else {
+          loginTab.style.display = "none";
+          registerTab.style.display = "block";
+          loginBtn.classList.remove("active");
+          registerBtn.classList.add("active");
+        }
+      }
+
+      // Cập nhật giao diện dựa trên trạng thái đăng nhập và vai trò
+      function updateUI() {
+        const authContainer = document.getElementById("authContainer");
+        const mainContent = document.getElementById("mainContent");
+        const userContent = document.getElementById("userContent");
+        const adminContent = document.getElementById("adminContent");
+
+        if (token) {
+          authContainer.style.display = "none";
+          mainContent.classList.add("active");
+          mainContent.style.display = "block";
+          if (userRole === "admin") {
+            userContent.style.display = "none";
+            adminContent.style.display = "block";
+            fetchProducts();
+          } else {
+            userContent.style.display = "block";
+            adminContent.style.display = "none";
+            displayProductsForUser();
+          }
+          fetchOrders();
+        } else {
+          authContainer.style.display = "block";
+          mainContent.classList.remove("active");
+          mainContent.style.display = "none";
+        }
+      }
+      updateUI();
+
+      // Hiển thị thông báo
+      function showMessage(elementId, message, isError = false) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = "message " + (isError ? "error" : "success");
+      }
+
+      // Đăng ký
+      async function register() {
+        const username = document.getElementById("registerUsername").value;
+        const password = document.getElementById("registerPassword").value;
+
+        if (!username || !password) {
+          showMessage("authMessage", "Vui lòng nhập đầy đủ thông tin", true);
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password, role: "user" }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            showMessage(
+              "authMessage",
+              "Đăng ký thành công! Vui lòng đăng nhập."
+            );
+            showTab("login");
+          } else {
+            showMessage("authMessage", data.error || "Đăng ký thất bại", true);
+          }
+        } catch (error) {
+          showMessage("authMessage", "Lỗi: " + error.message, true);
+        }
+      }
+
+      // Đăng nhập
+      async function login() {
+        const username = document.getElementById("loginUsername").value;
+        const password = document.getElementById("loginPassword").value;
+
+        if (!username || !password) {
+          showMessage("authMessage", "Vui lòng nhập đầy đủ thông tin", true);
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            token = data.token;
+            const payload = JSON.parse(atob(data.token.split(".")[1]));
+            userRole = payload.role || "user";
+            localStorage.setItem("token", token);
+            localStorage.setItem("role", userRole);
+            showMessage("authMessage", "Đăng nhập thành công!");
+            updateUI();
+          } else {
+            showMessage(
+              "authMessage",
+              data.error || "Đăng nhập thất bại",
+              true
+            );
+          }
+        } catch (error) {
+          showMessage("authMessage", "Lỗi: " + error.message, true);
+        }
+      }
+
+      // Đăng xuất
+      function logout() {
+        token = null;
+        userRole = "user";
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        updateUI();
+        showMessage("authMessage", "Đăng xuất thành công!");
+        document.getElementById("productList").innerHTML = "";
+        document.getElementById("orderList").innerHTML = "";
+        document.getElementById("userContent").innerHTML = "";
+      }
+
+      // Lấy và hiển thị danh sách sản phẩm cho user
+      async function displayProductsForUser() {
+        if (!token) {
+          showMessage("productMessage", "Vui lòng đăng nhập", true);
+          return;
+        }
+        try {
+          const response = await fetch(`${API_BASE_URL}/products`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const products = await response.json();
+          if (response.ok) {
+            const userContent = document.getElementById("userContent");
+            userContent.innerHTML = "";
+            products.forEach((product) => {
+              const card = document.createElement("div");
+              card.className = "product-card";
+              card.innerHTML = `
+                <img src="${
+                  product.imageUrl || "https://via.placeholder.com/150"
+                }" alt="${product.name}">
+                <h3>${product.name}</h3>
+                <p>${product.price.toLocaleString("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                })}</p>
+                <button class="buy-btn" onclick="buyProduct(${
+                  product.id
+                })">+</button>
+              `;
+              userContent.appendChild(card);
+            });
+          } else {
+            showMessage(
+              "productMessage",
+              products.error || "Lấy sản phẩm thất bại",
+              true
+            );
+          }
+        } catch (error) {
+          showMessage("productMessage", "Lỗi: " + error.message, true);
+        }
+      }
+
+      // Mua sản phẩm
+      async function buyProduct(productId) {
+        if (!token) {
+          showMessage("productMessage", "Vui lòng đăng nhập", true);
+          return;
+        }
+        try {
+          const response = await fetch(`${API_BASE_URL}/orders`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ productId, quantity: 1 }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            showMessage(
+              "productMessage",
+              "Thêm vào giỏ hàng thành công!",
+              false
+            );
+            fetchOrders();
+          } else {
+            showMessage(
+              "productMessage",
+              data.error || "Không thể thêm vào giỏ hàng",
+              true
+            );
+          }
+        } catch (error) {
+          showMessage("productMessage", "Lỗi: " + error.message, true);
+        }
+      }
+
+      // Lấy danh sách sản phẩm cho admin
+      async function fetchProducts() {
+        if (!token || userRole !== "admin") return;
+        try {
+          const response = await fetch(`${API_BASE_URL}/products`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const products = await response.json();
+          if (response.ok) {
+            displayProducts(products);
+          } else {
+            showMessage(
+              "productMessage",
+              products.error || "Lấy sản phẩm thất bại",
+              true
+            );
+          }
+        } catch (error) {
+          showMessage("productMessage", "Lỗi: " + error.message, true);
+        }
+      }
+
+      // Hiển thị danh sách sản phẩm cho admin
+      function displayProducts(products) {
+        const productList = document.getElementById("productList");
+        productList.innerHTML = "";
+        if (products && products.length > 0) {
+          products.forEach((product) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${product.id}</td>
+              <td>${product.name}</td>
+              <td>${product.price.toLocaleString("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              })}</td>
+              <td>
+                <button class="action-btn edit-btn" onclick="editProduct(${
+                  product.id
+                }, '${product.name.replace(/'/g, "\\'")}', ${
+              product.price
+            })">Sửa</button>
+                <button class="action-btn delete-btn" onclick="deleteProduct(${
+                  product.id
+                })">Xóa</button>
+              </td>
+            `;
+            productList.appendChild(row);
+          });
+        } else {
+          showMessage("productMessage", "Không có sản phẩm", true);
+        }
+      }
+
+      // Thêm sản phẩm
+      async function createProduct() {
+        if (!token || userRole !== "admin") {
+          showMessage(
+            "productMessage",
+            "Chỉ admin mới được thêm sản phẩm",
+            true
+          );
+          return;
+        }
+        const name = document.getElementById("productName").value.trim();
+        const price = parseFloat(document.getElementById("productPrice").value);
+
+        if (!name || isNaN(price) || price <= 0) {
+          showMessage(
+            "productMessage",
+            "Vui lòng nhập tên và giá hợp lệ",
+            true
+          );
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/products`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ name, price }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            showMessage("productMessage", "Thêm sản phẩm thành công!");
+            document.getElementById("productName").value = "";
+            document.getElementById("productPrice").value = "";
+            fetchProducts();
+          } else {
+            showMessage(
+              "productMessage",
+              data.error || "Thêm sản phẩm thất bại",
+              true
+            );
+          }
+        } catch (error) {
+          showMessage("productMessage", "Lỗi: " + error.message, true);
+        }
+      }
+
+      // Sửa sản phẩm
+      function editProduct(id, name, price) {
+        if (userRole !== "admin") {
+          showMessage(
+            "productMessage",
+            "Chỉ admin mới được sửa sản phẩm",
+            true
+          );
+          return;
+        }
+        document.getElementById("productName").value = name;
+        document.getElementById("productPrice").value = price;
+        const addButton = document.getElementById("addProductButton");
+        addButton.textContent = "Cập Nhật Sản Phẩm";
+        addButton.onclick = async () => {
+          const updatedName = document
+            .getElementById("productName")
+            .value.trim();
+          const updatedPrice = parseFloat(
+            document.getElementById("productPrice").value
+          );
+
+          if (!updatedName || isNaN(updatedPrice) || updatedPrice <= 0) {
+            showMessage(
+              "productMessage",
+              "Vui lòng nhập thông tin hợp lệ",
+              true
+            );
+            return;
+          }
+
+          try {
+            const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ name: updatedName, price: updatedPrice }),
+            });
+            const data = await response.json();
+            if (response.ok) {
+              showMessage("productMessage", "Cập nhật sản phẩm thành công!");
+              addButton.textContent = "Thêm Sản Phẩm";
+              addButton.onclick = createProduct;
+              document.getElementById("productName").value = "";
+              document.getElementById("productPrice").value = "";
+              fetchProducts();
+            } else {
+              showMessage(
+                "productMessage",
+                data.error || "Cập nhật thất bại",
+                true
+              );
+            }
+          } catch (error) {
+            showMessage("productMessage", "Lỗi: " + error.message, true);
+          }
+        };
+      }
+
+      // Xóa sản phẩm
+      async function deleteProduct(id) {
+        if (userRole !== "admin") {
+          showMessage(
+            "productMessage",
+            "Chỉ admin mới được xóa sản phẩm",
+            true
+          );
+          return;
+        }
+        if (!confirm("Bạn có chắc muốn xóa sản phẩm này không?")) return;
+        try {
+          const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            showMessage("productMessage", "Xóa sản phẩm thành công!");
+            fetchProducts();
+          } else {
+            const data = await response.json();
+            showMessage(
+              "productMessage",
+              data.error || "Xóa sản phẩm thất bại",
+              true
+            );
+          }
+        } catch (error) {
+          showMessage("productMessage", "Lỗi: " + error.message, true);
+        }
+      }
+
+      // Lấy danh sách đơn hàng
+      async function fetchOrders() {
+        document.getElementById("loading").style.display = "block";
+        if (!token) {
+          showMessage("orderMessage", "Vui lòng đăng nhập", true);
+          document.getElementById("loading").style.display = "none";
+          return;
+        }
+        try {
+          const response = await fetch(`${API_BASE_URL}/orders`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const orders = await response.json();
+          console.log("Orders:", orders);
+          if (response.ok) {
+            displayOrders(orders);
+          } else {
+            showMessage(
+              "orderMessage",
+              orders.error || "Lấy đơn hàng thất bại",
+              true
+            );
+          }
+        } catch (error) {
+          console.error("Fetch orders error:", error);
+          showMessage("orderMessage", "Lỗi: " + error.message, true);
+        }
+        document.getElementById("loading").style.display = "none";
+      }
+
+      // Hiển thị danh sách đơn hàng
+      function displayOrders(orders) {
+        const orderList = document.getElementById("orderList");
+        console.log("Displaying orders:", orders);
+        orderList.innerHTML = "";
+        if (orders && orders.length > 0) {
+          orders.forEach((order) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${order.id}</td>
+              <td>${order.userName || "Không rõ"}</td>
+              <td>${order.total.toLocaleString("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              })}</td>
+              <td>${order.status || "Chưa xử lý"}</td>
+            `;
+            orderList.appendChild(row);
+          });
+        } else {
+          orderList.innerHTML = `<tr><td colspan="4">Không có đơn hàng nào.</td></tr>`;
+          showMessage("orderMessage", "Không có đơn hàng", true);
+        }
+      }
+    </script>
+  </body>
+</html>

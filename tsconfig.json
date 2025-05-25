@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+      "outDir": "./dist",
+      "module": "commonjs",
+      "target": "ES2019",
+      "incremental": true,
+      "experimentalDecorators": true,
+      "moduleResolution": "node",
+      "sourceMap": true,
+    },
+    "include": [
+      "./src/*.ts",
+      "./src/**/*.ts", 
+      "test.ts"  
+      ,"backend/src/index.ts", "backend/config.ts"    ],
+    "exclude": [
+      "backend/node_modules",
+      "dist/"
+    ]
+  }

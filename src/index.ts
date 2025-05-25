@@ -42,23 +42,34 @@ export async function main() {
     /*******************************************************/
     
     const app = express();
-    const httpServer = createServer();
+    const httpServer = createServer(app);
     const io = new Server(httpServer, {
         cors: {
             origin: "*",
           }
     });
-    // io.on("connection", socket => console.log(socket.id));
+   
+
     const peer:any = ExpressPeerServer(httpServer);
     app.disable("x-powered-by");
     app.use(cors());
 
     app.use(express.json());
     /*******************************************************/
-    app.use('/peer', peer, ()=> {
-        console.log('asdfajskhfajkh');
-    });
-    peer.on('connection', (client) => { console.log(client.id) });
+    app.use('/peer', peer);
+    io.on("connect", (socket) => {
+        socket.on('joinRoom', (idRoom, userId, id) => {
+        console.log(idRoom, userId, id);
+        socket.join(idRoom);
+        socket.to(idRoom).emit('user-connected-room', userId, id);
+        socket.on('message', (message) => {
+          io.to(idRoom).emit('sendMessage', message, userId);
+          });
+        socket.on('disconnect', ()=> {
+              socket.to(idRoom).emit('user-disconnectd', userId);
+            })
+        });
+      });
     app.use("/api/v1/todo",checkJwt, NewTodoAPI(todoBLL));
     app.use("/api/v1", UserAPI(userBll));
     /*******************************************************/
